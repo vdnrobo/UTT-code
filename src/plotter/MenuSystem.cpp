@@ -69,8 +69,8 @@ void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
 
 // UI
 
-static byte totalItems() {
-  return activeMenu->item_count + (activeMenu->parentMenu ? 1 : 0);
+static byte totalItems(const Menu& menu) {
+  return menu.item_count + (nullptr != menu.parentMenu ? 1 : 0);
 }
 
 static void drawEditMode(const Menu::Item& item) {
@@ -106,7 +106,7 @@ static void drawCommonMode(const Menu& menu) {
   oled.println(menu.title);
   oled.setScale(1);
 
-  byte total = totalItems();
+  byte total = totalItems(*activeMenu);
   if (0 == total) return;
 
   if (cursor < scroll) {
@@ -142,20 +142,27 @@ void drawMenu() {
   }
 }
 
-void moveCursor(int d) {
-  if (editMode) {
-    int* v = activeMenu->items[cursor].sourceValue;
-    *v += d * activeMenu->items[cursor].valueAdjustStep;
-    if (*v < activeMenu->items[cursor].valueMin) *v = activeMenu->items[cursor].valueMin;
-    if (*v > activeMenu->items[cursor].valueMax) *v = activeMenu->items[cursor].valueMax;
-    drawMenu();
-    return;
-  }
+static void editItem(Menu::Item& item, int delta) {
+  int* v = item.sourceValue;
+  *v += delta * item.valueAdjustStep;
+  if (*v < item.valueMin) *v = item.valueMin;  // todo constrain
+  if (*v > item.valueMax) *v = item.valueMax;
+}
 
-  byte total = totalItems();
-  if (!total) return;
-  if (d > 0 && cursor < total - 1) cursor++;
-  if (d < 0 && cursor > 0) cursor--;
+static void adjustCursor(int delta) {
+  byte total = totalItems(*activeMenu);
+  if (0 == total) return;
+
+  if (delta > 0 && cursor < total - 1) cursor++;
+  if (delta < 0 && cursor > 0) cursor--;
+}
+
+void menuOnValue(int delta) {
+  if (editMode) {
+    editItem(activeMenu->items[cursor], delta);
+  } else {
+    adjustCursor(delta);
+  }
   drawMenu();
 }
 

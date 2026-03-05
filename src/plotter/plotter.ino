@@ -46,7 +46,7 @@ void setup() {
 
 void loop() {
   enc.tick();
-  if (enc.isRight()) moveCursor(1);
-  if (enc.isLeft()) moveCursor(-1);
+  if (enc.isRight()) menuOnValue(1);
+  if (enc.isLeft()) menuOnValue(-1);
   if (enc.isClick()) selectItem();
 }

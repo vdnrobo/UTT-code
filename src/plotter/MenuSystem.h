@@ -48,7 +48,7 @@ void initMenu(const char* title);
 // UI
 
 void drawMenu();
-void moveCursor(int d);
+void menuOnValue(int delta);
 void selectItem();
 void showMode(byte m, bool done);
 void showMessage(const char* line1, const char* line2 = nullptr);
