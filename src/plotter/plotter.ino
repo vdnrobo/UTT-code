@@ -1,16 +1,16 @@
 #include <GyverEncoder.h>
-#include <GyverOLED.h>
 
 #include "Config.h"
 #include "MenuSystem.h"
 #include "Motion.h"
+#include "Oled.hpp"
 #include "Primitives.h"
 #include "Settings.h"
 #include "Tool.hpp"
 
 // GLOBAL OBJECTS
 
-GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled{};
+Oled oled{};
 Encoder enc{ENC_A, ENC_B, ENC_SW};
 Tool tool{};
 

@@ -1,11 +1,9 @@
 #include "MenuSystem.h"
 
 #include <Arduino.h>
-#include <GyverOLED.h>
 
+#include "Oled.hpp"
 #include "Settings.h"
-
-extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
 
 // STATE
 
