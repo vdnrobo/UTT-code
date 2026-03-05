@@ -1,74 +1,47 @@
 #include <EEPROM.h>
-#include <GyverOLED.h>
 
 #include "Settings.h"
 
-extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
+#define EEPROM_ADDR   0
+#define EEPROM_MARKER 0xAB
 
-// GLOBALS
-
-int stepDelay;
-int servoUp;
-int servoDown;
-int servoWait;
-int circleSegs;
-
-const Settings defaults = {
-  EEPROM_MARKER,
-  300,
-  80,
-  50,
-  700,
-  80
+struct SettingsWithMarker {
+  uint8_t marker;
+  Settings settings;
 };
 
-// FUNCTIONS
+constexpr Settings default_settings {
+  .stepDelay = 300,
+  .servoAngleUp = 80,
+  .servoAngleDown = 50,
+  .servoWaitMs = 700,
+  .circleSegs = 80,
+};
 
-void loadSettings() {
-  Settings s;
+void Settings::load() {
+  SettingsWithMarker s;
   EEPROM.get(EEPROM_ADDR, s);
+
   if (s.marker != EEPROM_MARKER) {
-    s = defaults;
+    s.marker = EEPROM_MARKER;
+    s.settings = default_settings;
     EEPROM.put(EEPROM_ADDR, s);
   }
-  stepDelay = s.stepDelay;
-  servoUp = s.servoUp;
-  servoDown = s.servoDown;
-  servoWait = s.servoWait;
-  circleSegs = s.circleSegs;
+
+  *this = s.settings;
 }
 
-void saveSettings() {
-  Settings s;
-  s.marker = EEPROM_MARKER;
-  s.stepDelay = stepDelay;
-  s.servoUp = servoUp;
-  s.servoDown = servoDown;
-  s.servoWait = servoWait;
-  s.circleSegs = circleSegs;
-
-  Settings old;
-  EEPROM.get(EEPROM_ADDR, old);
-  if (memcmp(&s, &old, sizeof(Settings)) != 0) {
-    EEPROM.put(EEPROM_ADDR, s);
-  }
+void Settings::save() const {
+  // put применяет побайтово update, а он уже сам заботится о минимизации износа
+  EEPROM.put(EEPROM_ADDR, SettingsWithMarker{
+    .marker = EEPROM_MARKER,
+    .settings = *this, 
+  });
 }
 
-void resetSettings() {
-  stepDelay = defaults.stepDelay;
-  servoUp = defaults.servoUp;
-  servoDown = defaults.servoDown;
-  servoWait = defaults.servoWait;
-  circleSegs = defaults.circleSegs;
-  saveSettings();
-
-  oled.clear();
-  oled.home();
-  oled.setScale(2);
-  oled.println("Сброс!");
-  oled.setScale(1);
-  oled.println();
-  oled.println("Настройки по");
-  oled.println("умолчанию");
-  delay(1500);
+void Settings::reset() {
+  *this = default_settings;
+  save();
 }
+
+Settings settings;

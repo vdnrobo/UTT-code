@@ -1,35 +1,15 @@
 #pragma once
 
-#include <Arduino.h>
-
-// EEPROM
-
-#define EEPROM_ADDR   0
-#define EEPROM_MARKER 0xAB
-
-// SETTINGS
-
 struct Settings {
-  byte marker;
   int  stepDelay;
-  int  servoUp;
-  int  servoDown;
-  int  servoWait;
-  int  circleSegs;
+  int  servoAngleUp;
+  int  servoAngleDown;
+  int  servoWaitMs;
+  int  circleSegs; // Не удалено, потому что предполагаю, что на это поле что-то запланировано.
+
+  void load();
+  void save() const;
+  void reset();
 };
 
-// GLOBALS
-
-extern int stepDelay;
-extern int servoUp;
-extern int servoDown;
-extern int servoWait;
-extern int circleSegs;
-
-extern const Settings defaults;
-
-// FUNCTIONS
-
-void loadSettings();
-void saveSettings();
-void resetSettings();
+extern Settings settings;

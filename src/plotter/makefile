@@ -22,3 +22,5 @@ monitor:
 
 shapshot:
 	python shapshot.py
+
+ss: shapshot

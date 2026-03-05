@@ -33,6 +33,17 @@ void showMessage(const char* line1, const char* line2) {
   }
 }
 
+void showResetMessage() {
+  oled.clear();
+  oled.home();
+  oled.setScale(2);
+  oled.println("Сброс!");
+  oled.setScale(1);
+  oled.println();
+  oled.println("Настройки по");
+  oled.println("умолчанию");
+}
+
 void circleRel(float r, int seg) {
   float step = 2.0 * PI / seg;
   float x0 = r, y0 = 0;
