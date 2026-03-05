@@ -1,19 +1,16 @@
 #include <EEPROM.h>
-#include <GyverOLED.h>
 
 #include "Settings.h"
 
 #define EEPROM_ADDR   0
 #define EEPROM_MARKER 0xAB
 
-extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
-
 struct SettingsWithMarker {
-  byte marker;
+  uint8_t marker;
   Settings settings;
 };
 
-constexpr Settings defaults {
+constexpr Settings default_settings {
   .stepDelay = 300,
   .servoAngleUp = 80,
   .servoAngleDown = 50,
@@ -24,9 +21,10 @@ constexpr Settings defaults {
 void Settings::load() {
   SettingsWithMarker s;
   EEPROM.get(EEPROM_ADDR, s);
-  
+
   if (s.marker != EEPROM_MARKER) {
-    s.settings = defaults;
+    s.marker = EEPROM_MARKER;
+    s.settings = default_settings;
     EEPROM.put(EEPROM_ADDR, s);
   }
 
@@ -42,19 +40,8 @@ void Settings::save() const {
 }
 
 void Settings::reset() {
-  *this = defaults;
+  *this = default_settings;
   save();
-
-  // todo Вынести от сюда это всё ниже:
-  oled.clear();
-  oled.home();
-  oled.setScale(2);
-  oled.println("Сброс!");
-  oled.setScale(1);
-  oled.println();
-  oled.println("Настройки по");
-  oled.println("умолчанию");
-  delay(1500);
 }
 
 Settings settings;

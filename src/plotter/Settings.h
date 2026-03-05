@@ -5,7 +5,7 @@ struct Settings {
   int  servoAngleUp;
   int  servoAngleDown;
   int  servoWaitMs;
-  int  circleSegs; // todo Что делать с неиспользуемым полем?
+  int  circleSegs; // Не удалено, потому что предполагаю, что на это поле что-то запланировано.
 
   void load();
   void save() const;

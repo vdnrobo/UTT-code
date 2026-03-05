@@ -6,6 +6,7 @@
 
 void showMode(byte m, bool done);
 void showMessage(const char* line1, const char* line2 = nullptr);
+void showResetMessage();
 
 // primitive figure draw functions
 
