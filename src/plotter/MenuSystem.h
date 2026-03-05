@@ -2,6 +2,7 @@
 
 #include <Arduino.h>  // Только ради определения byte
 
+#include "ArrayList.hpp"
 #include "Config.h"
 
 // TYPES
@@ -28,8 +29,7 @@ struct Menu {
   const char* title;
   Menu* parentMenu;
 
-  Item items[MAX_MENU_ITEMS];
-  byte _itemCount;
+  ArrayList<Item, MAX_MENU_ITEMS> items{};
 
   static Menu& root();
 

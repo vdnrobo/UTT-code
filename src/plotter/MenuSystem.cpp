@@ -23,7 +23,7 @@ Menu& Menu::root() {
 }
 
 byte Menu::itemsTotal() const {
-  return _itemCount + (nullptr != parentMenu ? 1 : 0);
+  return items.size() + (nullptr != parentMenu ? 1 : 0);
 }
 
 void Menu::Item::drawEditMode() const {
@@ -87,41 +87,39 @@ void Menu::Item::onClick() {
 void initMenu(const char* title) {
   Menu::root().title = title;
   Menu::root().parentMenu = nullptr;
-  Menu::root()._itemCount = 0;
+  Menu::root().items.clear();
   menuCount = 1;
   activeMenu = &Menu::root();
 }
 
 void Menu::addParagraph(const char* name, Action func) {
-  if (_itemCount >= MAX_MENU_ITEMS) return;
-  byte i = _itemCount++;
-  auto& item = items[i];
+  if (items.full()) return;
+  Item item;
   item.name = name;
   item.action = func;
   item.targetMenu = nullptr;
   item.valueSource = nullptr;
+  items.push(item);
 }
 
 Menu* Menu::addSubmenu(const char* name) {
-  if (menuCount >= MAX_MENUS || _itemCount >= MAX_MENU_ITEMS) return nullptr;
+  if (menuCount >= MAX_MENUS || items.full()) return nullptr;
   byte id = menuCount++;
   menus[id].title = name;
   menus[id].parentMenu = parentMenu;
-  menus[id]._itemCount = 0;
 
-  byte i = _itemCount++;
-  auto& item = items[i];
+  Item item;
   item.name = name;
   item.action = nullptr;
   item.targetMenu = &menus[id];
   item.valueSource = nullptr;
+  items.push(item);
   return &menus[id];
 }
 
 void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
-  if (_itemCount >= MAX_MENU_ITEMS) return;
-  byte i = _itemCount++;
-  auto& item = items[i];
+  if (items.full()) return;
+  Item item;
   item.name = name;
   item.action = nullptr;
   item.targetMenu = nullptr;
@@ -129,6 +127,7 @@ void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
   item.valueMin = vmin;
   item.valueMax = vmax;
   item.valueAdjustStep = vstep;
+  items.push(item);
 }
 
 void Menu::drawItems(byte cursor) const {
@@ -145,7 +144,7 @@ void Menu::drawItems(byte cursor) const {
   for (byte i = scroll; i < end; i++) {
     oled.write(i == cursor ? '>' : ' ');
     oled.write(' ');
-    if (i < _itemCount) {
+    if (i < items.size()) {
       items[i].drawCommonMode();
     } else {
       oled.print("<< Назад");  // Квазивиджет
@@ -156,7 +155,7 @@ void Menu::drawItems(byte cursor) const {
 
 void Menu::onClick(byte cursor) {
   // Квазивиджет, чей action - установка parentMenu
-  if (nullptr != parentMenu && cursor == _itemCount) {
+  if (nullptr != parentMenu && cursor == items.size()) {
     bindMenu(*parentMenu);
     return;
   }
