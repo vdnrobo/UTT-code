@@ -17,6 +17,12 @@ struct Menu {
     int valueMin;
     int valueMax;
     int valueAdjustStep;
+  
+    void drawEditMode() const;
+    void drawCommonMode() const;
+  
+    void onValue(int delta);
+    void onClick();
   };
 
   const char* title;

@@ -14,8 +14,66 @@ byte cursor = 0;
 byte scroll = 0;
 bool editMode = 0;
 
+static void bindMenu(Menu& menu) {
+  activeMenu = &menu;
+  cursor = 0;
+  scroll = 0;
+}
+
 Menu& Menu::root() {
   return menus[0];
+}
+
+void Menu::Item::drawEditMode() const {
+  oled.setScale(1);
+  oled.println(name);
+  oled.println();
+  oled.setScale(3);
+  oled.print("  ");
+  oled.println(*sourceValue);
+  oled.setScale(1);
+  oled.println();
+  oled.print("  [");
+  oled.print(valueMin);
+  oled.print(" .. ");
+  oled.print(valueMax);
+  oled.println("]");
+  oled.println();
+  oled.println("  Нажми для выхода");
+}
+
+void Menu::Item::drawCommonMode() const {
+  oled.print(name);
+  if (nullptr != targetMenu) {
+    oled.print(" >>");
+  } else if (nullptr != sourceValue) {
+    oled.print(": ");
+    oled.print(*sourceValue);
+  }
+}
+
+void Menu::Item::onValue(int delta) {
+  int* v = sourceValue;
+  *v += delta * valueAdjustStep;
+  if (*v < valueMin) *v = valueMin;  // todo constrain
+  if (*v > valueMax) *v = valueMax;
+}
+
+void Menu::Item::onClick() {
+  if (nullptr != targetMenu) {
+    bindMenu(*targetMenu);
+    return;
+  }
+
+  if (nullptr != sourceValue) {
+    editMode = true;
+    return;
+  }
+
+  if (nullptr != action) {
+    action();
+    return;
+  }
 }
 
 // BUILDER
@@ -73,34 +131,6 @@ static byte totalItems(const Menu& menu) {
   return menu.item_count + (nullptr != menu.parentMenu ? 1 : 0);
 }
 
-static void drawEditMode(const Menu::Item& item) {
-  oled.setScale(1);
-  oled.println(item.name);
-  oled.println();
-  oled.setScale(3);
-  oled.print("  ");
-  oled.println(*item.sourceValue);
-  oled.setScale(1);
-  oled.println();
-  oled.print("  [");
-  oled.print(item.valueMin);
-  oled.print(" .. ");
-  oled.print(item.valueMax);
-  oled.println("]");
-  oled.println();
-  oled.println("  Нажми для выхода");
-}
-
-static void drawItemCommonMode(const Menu::Item& item) {
-  oled.print(item.name);
-  if (nullptr != item.targetMenu) {
-    oled.print(" >>");
-  } else if (nullptr != item.sourceValue) {
-    oled.print(": ");
-    oled.print(*item.sourceValue);
-  }
-}
-
 static void drawCommonMode(const Menu& menu) {
   oled.setScale(2);
   oled.println(menu.title);
@@ -121,9 +151,9 @@ static void drawCommonMode(const Menu& menu) {
   for (byte i = scroll; i < end; i++) {
     oled.print(i == cursor ? "> " : "  ");
     if (i < menu.item_count) {
-      drawItemCommonMode(menu.items[i]);
+      menu.items[i].drawCommonMode();
     } else {
-      oled.print("<< Назад"); // Квазивиджет
+      oled.print("<< Назад");  // Квазивиджет
     }
     oled.println();
   }
@@ -136,17 +166,10 @@ void drawMenu() {
   if (nullptr == activeMenu) return;
 
   if (editMode) {
-    drawEditMode(activeMenu->items[cursor]);
+    activeMenu->items[cursor].drawEditMode();
   } else {
     drawCommonMode(*activeMenu);
   }
-}
-
-static void editItem(Menu::Item& item, int delta) {
-  int* v = item.sourceValue;
-  *v += delta * item.valueAdjustStep;
-  if (*v < item.valueMin) *v = item.valueMin;  // todo constrain
-  if (*v > item.valueMax) *v = item.valueMax;
 }
 
 static void adjustCursor(int delta) {
@@ -159,44 +182,21 @@ static void adjustCursor(int delta) {
 
 void menuOnValue(int delta) {
   if (editMode) {
-    editItem(activeMenu->items[cursor], delta);
+    activeMenu->items[cursor].onValue(delta);
   } else {
     adjustCursor(delta);
   }
   drawMenu();
 }
 
-static void bindMenu(Menu& menu) {
-  activeMenu = &menu;
-  cursor = 0;
-  scroll = 0;
-}
-
-static void onItemSelected(Menu::Item& item) {
-  if (nullptr != item.targetMenu) {
-    bindMenu(*item.targetMenu);
-    return;
-  }
-
-  if (nullptr != item.sourceValue) {
-    editMode = true;
-    return;
-  }
-
-  if (nullptr != item.action) {
-    item.action();
-    return;
-  }
-}
-
 static void onPageSelected(Menu& menu) {
-  // т.е. У нас как будто бы есть Квазивиджет, чей action - установка parentMenu
+  // Квазивиджет, чей action - установка parentMenu
   if (nullptr != menu.parentMenu && cursor == menu.item_count) {
     bindMenu(*menu.parentMenu);
     return;
   }
 
-  onItemSelected(menu.items[cursor]);
+  menu.items[cursor].onClick();
 }
 
 void selectItem() {
