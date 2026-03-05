@@ -1,14 +1,11 @@
-#ifndef MOTION_H
-#define MOTION_H
-
-#include <Arduino.h>
+#pragma once
 
 // STATE
 
 extern long posX;
 extern long posY;
 
-// CONVERTION
+// CONVERSION
 
 long mmToStepsX(float mm);
 long mmToStepsY(float mm);
@@ -44,5 +41,3 @@ void moveMMY(float dy);
 
 void moveAbsMM(float x, float y);
 void moveAbsSteps(long x, long y);
-
-#endif // MOTION_H

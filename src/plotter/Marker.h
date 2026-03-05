@@ -1,7 +1,5 @@
-#ifndef MARKER_H
-#define MARKER_H
+#pragma once
 
-#include <Arduino.h>
 #include <Servo.h>
 
 // SERVO
@@ -14,5 +12,3 @@ void initMarker();
 void markerUp();
 void markerDown();
 void makeDot();
-
-#endif // MARKER_H

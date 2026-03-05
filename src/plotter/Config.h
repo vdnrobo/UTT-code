@@ -1,7 +1,4 @@
-#ifndef CONFIG_H
-#define CONFIG_H
-
-#include <Arduino.h>
+#pragma once
 
 // PINS
 
@@ -41,5 +38,3 @@
 #define MAX_ITEMS 16
 #define MAX_MENUS 12
 #define VISIBLE 5
-
-#endif // CONFIG_H

@@ -1,5 +1,4 @@
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#pragma once
 
 #include <Arduino.h>
 
@@ -19,7 +18,7 @@ struct Settings {
   int  circleSegs;
 };
 
-// GLOABALS
+// GLOBALS
 
 extern int stepDelay;
 extern int servoUp;
@@ -34,5 +33,3 @@ extern const Settings defaults;
 void loadSettings();
 void saveSettings();
 void resetSettings();
-
-#endif // SETTINGS_H
