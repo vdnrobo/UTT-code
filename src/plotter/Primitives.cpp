@@ -1,49 +1,7 @@
 #include "Primitives.h"
 
-#include <GyverOLED.h>
-
-#include "Config.h"
 #include "Motion.h"
-#include "Settings.h"
 #include "Tool.hpp"
-
-extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
-
-// UI
-
-void showMode(byte m, bool done) {
-  oled.clear();
-  oled.home();
-  oled.setScale(2);
-  oled.print("Режим ");
-  oled.println(m);
-  oled.setScale(1);
-  oled.println();
-  oled.println(done ? "Выполнен" : "Выполняется");
-}
-
-void showMessage(const char* line1, const char* line2) {
-  oled.clear();
-  oled.home();
-  oled.setScale(2);
-  oled.println(line1);
-  oled.setScale(1);
-  if (line2) {
-    oled.println();
-    oled.println(line2);
-  }
-}
-
-void showResetMessage() {
-  oled.clear();
-  oled.home();
-  oled.setScale(2);
-  oled.println("Сброс!");
-  oled.setScale(1);
-  oled.println();
-  oled.println("Настройки по");
-  oled.println("умолчанию");
-}
 
 void circleRel(float r, int seg) {
   float step = 2.0 * PI / seg;

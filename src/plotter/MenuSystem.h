@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Arduino.h>
+#include <Arduino.h>  // Только ради определения byte
 
 #include "Config.h"
 
@@ -45,3 +45,6 @@ void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
 void drawMenu();
 void moveCursor(int d);
 void selectItem();
+void showMode(byte m, bool done);
+void showMessage(const char* line1, const char* line2 = nullptr);
+void showResetMessage();
