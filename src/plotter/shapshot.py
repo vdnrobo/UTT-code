@@ -6,7 +6,7 @@ sys.stdout = open("out.txt", "wt", encoding='utf-8')
 DIR = Path(".")
 
 target_ext = (
-    "h", "cpp", "md"
+    "h", "hpp", "cpp", "md", "ino"
 )
 
 for ext in target_ext:

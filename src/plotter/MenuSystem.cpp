@@ -1,183 +1,163 @@
 #include "MenuSystem.h"
-#include "Settings.h"
 
-#include <Arduino.h>
-#include <GyverOLED.h>
-
-extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
-
-// STATE
-
-Menu menus[MAX_MENUS];
-byte menuCount = 0;
-Menu* cur = nullptr;
-byte cursor = 0;
-byte scroll = 0;
-bool editMode = 0;
-
-// BUILDER
-
-void initMenu(const char* title) {
-  menuCount = 1;
-  menus[0].title = title;
-  menus[0].parent = nullptr;
-  menus[0].count = 0;
-  cur = &menus[0];
+void Item::drawEditMode() const {
+  oled.setScale(1);
+  oled.println(name);
+  oled.println();
+  oled.setScale(3);
+  oled.print("  ");
+  if (nullptr == valueSource) {
+    oled.println("null");
+  } else {
+    oled.println(*valueSource);
+  }
+  oled.setScale(1);
+  oled.println();
+  oled.print("  [");
+  oled.print(valueMin);
+  oled.print(" .. ");
+  oled.print(valueMax);
+  oled.println("]");
+  oled.println();
+  oled.println("  Нажми для выхода");
 }
 
-void addParagraph(Menu* m, const char* name, Action func) {
-  if (m->count >= MAX_ITEMS) return;
-  byte i = m->count++;
-  m->names[i] = name;
-  m->actions[i] = func;
-  m->submenus[i] = nullptr;
-  m->values[i] = nullptr;
+void Item::drawCommonMode() const {
+  oled.print(name);
+  if (nullptr != targetMenu) {
+    oled.print(" >>");
+    oled.print(targetMenu->title);
+  } else if (nullptr != valueSource) {
+    oled.print(": ");
+    oled.print(*valueSource);
+  }
 }
 
-void addParagraph(const char* name, Action func) {
-  addParagraph(&menus[0], name, func);
+void Item::onValue(int delta) {
+  if (nullptr == valueSource) return;
+  *valueSource += delta * valueAdjustStep;
+  *valueSource = constrain(*valueSource, valueMin, valueMax);
 }
 
-Menu* addSubmenu(Menu* parent, const char* name) {
-  if (menuCount >= MAX_MENUS || parent->count >= MAX_ITEMS) return nullptr;
-  byte id = menuCount++;
-  menus[id].title = name;
-  menus[id].parent = parent;
-  menus[id].count = 0;
-
-  byte i = parent->count++;
-  parent->names[i] = name;
-  parent->actions[i] = nullptr;
-  parent->submenus[i] = &menus[id];
-  parent->values[i] = nullptr;
-  return &menus[id];
-}
-
-Menu* addSubmenu(const char* name) {
-  return addSubmenu(&menus[0], name);
-}
-
-void addValue(Menu* m, const char* name, int* val, int vmin, int vmax, int vstep) {
-  if (m->count >= MAX_ITEMS) return;
-  byte i = m->count++;
-  m->names[i] = name;
-  m->actions[i] = nullptr;
-  m->submenus[i] = nullptr;
-  m->values[i] = val;
-  m->vmins[i] = vmin;
-  m->vmaxs[i] = vmax;
-  m->vsteps[i] = vstep;
-}
-
-void addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
-  addValue(&menus[0], name, val, vmin, vmax, vstep);
-}
-
-// UI
-
-static byte totalItems() {
-  return cur->count + (cur->parent ? 1 : 0);
-}
-
-void drawMenu() {
-  oled.clear();
-  oled.home();
-
-  if (editMode) {
-    oled.setScale(1);
-    oled.println(cur->names[cursor]);
-    oled.println();
-    oled.setScale(3);
-    oled.print("  ");
-    oled.println(*cur->values[cursor]);
-    oled.setScale(1);
-    oled.println();
-    oled.print("  [");
-    oled.print(cur->vmins[cursor]);
-    oled.print(" .. ");
-    oled.print(cur->vmaxs[cursor]);
-    oled.println("]");
-    oled.println();
-    oled.println("  Нажми для выхода");
+void Item::onClick() {
+  if (nullptr != targetMenu) {
+    ui.bind(*targetMenu);
     return;
   }
 
+  if (nullptr != valueSource) {
+    ui.editMode = true;
+    return;
+  }
+
+  if (nullptr != action) {
+    action();
+    return;
+  }
+}
+
+void Menu::addParagraph(const char* name, Action func) {
+  if (items.full()) return;
+  Item item;
+  item.name = name;
+  item.action = func;
+  item.targetMenu = nullptr;
+  item.valueSource = nullptr;
+  items.push(item);
+}
+
+Menu* Menu::addSubmenu(const char* name) {
+  if (ui._menus.full() || items.full()) return nullptr;
+  Menu sub_menu;
+  sub_menu.title = name;
+  sub_menu.parentMenu = parentMenu;
+  ui._menus.push(sub_menu);
+
+  Item item;
+  item.name = name;
+  item.action = nullptr;
+  item.targetMenu = &ui._menus.back();
+  item.valueSource = nullptr;
+  items.push(item);
+  return &ui._menus.back();
+}
+
+void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
+  if (items.full()) return;
+  Item item;
+  item.name = name;
+  item.action = nullptr;
+  item.targetMenu = nullptr;
+  item.valueSource = val;
+  item.valueMin = vmin;
+  item.valueMax = vmax;
+  item.valueAdjustStep = vstep;
+  items.push(item);
+}
+
+void Menu::drawItems(byte cursor) const {
   oled.setScale(2);
-  oled.println(cur->title);
+  oled.println(title);
   oled.setScale(1);
 
-  byte total = totalItems();
-  if (!total) return;
+  const byte total = itemsTotal();
+  if (0 == total) return;
 
-  if (cursor < scroll) scroll = cursor;
-  if (cursor >= scroll + VISIBLE) scroll = cursor - VISIBLE + 1;
-
-  byte end = min(scroll + VISIBLE, total);
+  const byte scroll = calcScroll(cursor);
+  const byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
 
   for (byte i = scroll; i < end; i++) {
-    oled.print(i == cursor ? "> " : "  ");
-    if (i < cur->count) {
-      oled.print(cur->names[i]);
-      if (cur->submenus[i]) {
-        oled.print(" >>");
-      } else if (cur->values[i]) {
-        oled.print(": ");
-        oled.print(*cur->values[i]);
-      }
+    oled.write(i == cursor ? '>' : ' ');
+    oled.write(' ');
+    if (i < items.size()) {
+      items[i].drawCommonMode();
     } else {
-      oled.print("<< Назад");
+      oled.print("<< Назад");  // Квазивиджет
     }
     oled.println();
   }
 }
 
-void moveCursor(int d) {
-  if (editMode) {
-    int* v = cur->values[cursor];
-    *v += d * cur->vsteps[cursor];
-    if (*v < cur->vmins[cursor]) *v = cur->vmins[cursor];
-    if (*v > cur->vmaxs[cursor]) *v = cur->vmaxs[cursor];
-    drawMenu();
+void Menu::onClick(byte cursor) {
+  // Квазивиджет, чей action - установка parentMenu
+  if (nullptr != parentMenu && cursor == items.size()) {
+    ui.bind(*parentMenu);
     return;
   }
 
-  byte total = totalItems();
-  if (!total) return;
-  if (d > 0 && cursor < total - 1) cursor++;
-  if (d < 0 && cursor > 0) cursor--;
-  drawMenu();
+  items[cursor].onClick();
 }
 
-void selectItem() {
-  if (editMode) {
-    editMode = false;
-    settings.save();
-    drawMenu();
-    return;
-  }
+void showMode(byte mode, bool done) {
+  oled.clear();
+  oled.home();
+  oled.setScale(2);
+  oled.print("Режим ");
+  oled.println(mode);
+  oled.setScale(1);
+  oled.println();
+  oled.println(done ? "Выполнен" : "Выполняется");
+}
 
-  if (cur->parent && cursor == cur->count) {
-    cur = cur->parent;
-    cursor = scroll = 0;
-    drawMenu();
-    return;
+void showMessage(const char* line1, const char* line2) {
+  oled.clear();
+  oled.home();
+  oled.setScale(2);
+  oled.println(line1);
+  oled.setScale(1);
+  if (nullptr != line2) {
+    oled.println();
+    oled.println(line2);
   }
+}
 
-  if (cur->submenus[cursor]) {
-    cur = cur->submenus[cursor];
-    cursor = scroll = 0;
-    drawMenu();
-    return;
-  }
-
-  if (cur->values[cursor]) {
-    editMode = true;
-    drawMenu();
-    return;
-  }
-
-  if (cur->actions[cursor]) {
-    cur->actions[cursor]();
-    drawMenu();
-  }
+void showResetMessage() {
+  oled.clear();
+  oled.home();
+  oled.setScale(2);
+  oled.println("Сброс!");
+  oled.setScale(1);
+  oled.println();
+  oled.println("Настройки по");
+  oled.println("умолчанию");
 }

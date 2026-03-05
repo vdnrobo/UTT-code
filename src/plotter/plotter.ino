@@ -1,36 +1,35 @@
-#include <GyverOLED.h>
 #include <GyverEncoder.h>
 
 #include "Config.h"
-#include "Settings.h"
 #include "MenuSystem.h"
 #include "Motion.h"
-#include "Marker.h"
+#include "Oled.hpp"
 #include "Primitives.h"
+#include "Settings.h"
+#include "Tool.hpp"
 
 // GLOBAL OBJECTS
 
-GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
-Encoder enc(ENC_A, ENC_B, ENC_SW);
+Oled oled{};
+Encoder enc{ENC_A, ENC_B, ENC_SW};
+Tool tool{};
+UI ui{};
 
 // DRAWING MODES
-
-
-
-// SETUP
+// А что здесь будет? Перечисление? Процедуры?
 
 void setup() {
   initMotion();
-  
+
   pinMode(BTN_X, INPUT);
   pinMode(BTN_Y, INPUT);
-  
-  pinMode(13, OUTPUT);
+
+  pinMode(13, OUTPUT);  // LED_BUILTIN??
 
   settings.load();
 
-  initMarker();
-  markerUp();
+  tool.enable();
+  tool.up();
 
   enc.setType(TYPE2);
   enc.setFastTimeout(30);
@@ -41,16 +40,13 @@ void setup() {
 
   // MENU CONFIGURATION
 
-  initMenu("ГЛАВНАЯ");
-
-  drawMenu();
+  ui.initMenu("ГЛАВНАЯ");
+  ui.draw();
 }
-
-// LOOP
 
 void loop() {
   enc.tick();
-  if (enc.isRight()) moveCursor(1);
-  if (enc.isLeft())  moveCursor(-1);
-  if (enc.isClick()) selectItem();
+  if (enc.isRight()) ui.onValue(1);
+  if (enc.isLeft()) ui.onValue(-1);
+  if (enc.isClick()) ui.onClick();
 }

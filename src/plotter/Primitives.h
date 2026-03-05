@@ -1,14 +1,6 @@
-#pragma once
-
-#include <Arduino.h>
-
-// UI
-
-void showMode(byte m, bool done);
-void showMessage(const char* line1, const char* line2 = nullptr);
-void showResetMessage();
-
 // primitive figure draw functions
+
+#pragma once
 
 void circleRel(float r, int seg);
 void circleAt(float r, int seg);
