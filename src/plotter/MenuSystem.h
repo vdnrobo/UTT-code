@@ -29,9 +29,11 @@ struct Menu {
   Menu* parentMenu;
 
   Item items[MAX_MENU_ITEMS];
-  byte item_count;
+  byte _itemCount;
 
   static Menu& root();
+
+  byte itemsTotal() const;
 
   void addParagraph(const char* name, Action func);
   Menu* addSubmenu(const char* name);
