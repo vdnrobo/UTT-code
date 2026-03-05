@@ -9,18 +9,23 @@
 using Action = void (*)();
 
 struct Menu {
+  struct Item {
+    const char* names; 
+    Action actions;
+    Menu* submenus;
+    int* values;
+    int vmins;
+    int vmaxs;
+    int vsteps;
+  };
+
   const char* title;
-  const char* names[MAX_MENU_ITEMS]; // Todo: Struct Of Array -> Array of structs
-  Action actions[MAX_MENU_ITEMS];
-  Menu* submenus[MAX_MENU_ITEMS];
-  int* values[MAX_MENU_ITEMS];
-  int vmins[MAX_MENU_ITEMS];
-  int vmaxs[MAX_MENU_ITEMS];
-  int vsteps[MAX_MENU_ITEMS];
   Menu* parent;
-  byte count;
- 
-  static Menu &root();
+
+  Item items[MAX_MENU_ITEMS];
+  byte item_count;
+
+  static Menu& root();
 
   void addParagraph(const char* name, Action func);
   Menu* addSubmenu(const char* name);
