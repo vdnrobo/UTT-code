@@ -10,7 +10,7 @@ using Action = void (*)();
 
 struct Menu {
   const char* title;
-  const char* names[MAX_MENU_ITEMS];
+  const char* names[MAX_MENU_ITEMS]; // Todo: Struct Of Array -> Array of structs
   Action actions[MAX_MENU_ITEMS];
   Menu* submenus[MAX_MENU_ITEMS];
   int* values[MAX_MENU_ITEMS];
@@ -19,6 +19,8 @@ struct Menu {
   int vsteps[MAX_MENU_ITEMS];
   Menu* parent;
   byte count;
+ 
+  static Menu &root();
 
   void addParagraph(const char* name, Action func);
   Menu* addSubmenu(const char* name);
@@ -37,9 +39,6 @@ extern bool editMode;
 // BUILDER
 
 void initMenu(const char* title);
-void addParagraph(const char* name, Action func);
-Menu* addSubmenu(const char* name);
-void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
 
 // UI
 

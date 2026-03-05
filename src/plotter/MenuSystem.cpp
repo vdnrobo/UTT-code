@@ -14,65 +14,54 @@ byte cursor = 0;
 byte scroll = 0;
 bool editMode = 0;
 
+Menu& Menu::root() {
+  return menus[0];
+}
+
 // BUILDER
 
 void initMenu(const char* title) {
+  Menu::root().title = title;
+  Menu::root().parent = nullptr;
+  Menu::root().count = 0;
   menuCount = 1;
-  menus[0].title = title;
-  menus[0].parent = nullptr;
-  menus[0].count = 0;
-  activeMenu = &menus[0];
+  activeMenu = &Menu::root();
 }
 
 void Menu::addParagraph(const char* name, Action func) {
-  auto m = this;
-  if (m->count >= MAX_MENU_ITEMS) return;
-  byte i = m->count++;
-  m->names[i] = name;
-  m->actions[i] = func;
-  m->submenus[i] = nullptr;
-  m->values[i] = nullptr;
-}
-
-void addParagraph(const char* name, Action func) {
-  menus[0].addParagraph(name, func);
+  if (count >= MAX_MENU_ITEMS) return;
+  byte i = count++;
+  names[i] = name;
+  actions[i] = func;
+  submenus[i] = nullptr;
+  values[i] = nullptr;
 }
 
 Menu* Menu::addSubmenu(const char* name) {
-  auto parent = this;
-  if (menuCount >= MAX_MENUS || parent->count >= MAX_MENU_ITEMS) return nullptr;
+  if (menuCount >= MAX_MENUS || count >= MAX_MENU_ITEMS) return nullptr;
   byte id = menuCount++;
   menus[id].title = name;
   menus[id].parent = parent;
   menus[id].count = 0;
 
-  byte i = parent->count++;
-  parent->names[i] = name;
-  parent->actions[i] = nullptr;
-  parent->submenus[i] = &menus[id];
-  parent->values[i] = nullptr;
+  byte i = count++;
+  names[i] = name;
+  actions[i] = nullptr;
+  submenus[i] = &menus[id];
+  values[i] = nullptr;
   return &menus[id];
 }
 
-Menu* addSubmenu(const char* name) {
-  return menus[0].addSubmenu(name);
-}
-
 void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
-  auto m = this;
-  if (m->count >= MAX_MENU_ITEMS) return;
-  byte i = m->count++;
-  m->names[i] = name;
-  m->actions[i] = nullptr;
-  m->submenus[i] = nullptr;
-  m->values[i] = val;
-  m->vmins[i] = vmin;
-  m->vmaxs[i] = vmax;
-  m->vsteps[i] = vstep;
-}
-
-void addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
-  menus[0].addValue(name, val, vmin, vmax, vstep);
+  if (count >= MAX_MENU_ITEMS) return;
+  byte i = count++;
+  names[i] = name;
+  actions[i] = nullptr;
+  submenus[i] = nullptr;
+  values[i] = val;
+  vmins[i] = vmin;
+  vmaxs[i] = vmax;
+  vsteps[i] = vstep;
 }
 
 // UI
