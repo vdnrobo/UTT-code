@@ -34,7 +34,7 @@ void Menu::Item::drawEditMode() const {
   oled.println();
   oled.setScale(3);
   oled.print("  ");
-  oled.println(*sourceValue);
+  oled.println(*valueSource);
   oled.setScale(1);
   oled.println();
   oled.print("  [");
@@ -51,17 +51,16 @@ void Menu::Item::drawCommonMode() const {
   if (nullptr != targetMenu) {
     oled.print(" >>");
     oled.print(targetMenu->title);
-  } else if (nullptr != sourceValue) {
+  } else if (nullptr != valueSource) {
     oled.print(": ");
-    oled.print(*sourceValue);
+    oled.print(*valueSource);
   }
 }
 
 void Menu::Item::onValue(int delta) {
-  int* v = sourceValue;
-  *v += delta * valueAdjustStep;
-  if (*v < valueMin) *v = valueMin;  // todo constrain
-  if (*v > valueMax) *v = valueMax;
+  if (nullptr == valueSource) return;
+  *valueSource += delta * valueAdjustStep;
+  *valueSource = constrain(*valueSource, valueMin, valueMax);
 }
 
 void Menu::Item::onClick() {
@@ -70,7 +69,7 @@ void Menu::Item::onClick() {
     return;
   }
 
-  if (nullptr != sourceValue) {
+  if (nullptr != valueSource) {
     editMode = true;
     return;
   }
@@ -98,7 +97,7 @@ void Menu::addParagraph(const char* name, Action func) {
   item.name = name;
   item.action = func;
   item.targetMenu = nullptr;
-  item.sourceValue = nullptr;
+  item.valueSource = nullptr;
 }
 
 Menu* Menu::addSubmenu(const char* name) {
@@ -113,7 +112,7 @@ Menu* Menu::addSubmenu(const char* name) {
   item.name = name;
   item.action = nullptr;
   item.targetMenu = &menus[id];
-  item.sourceValue = nullptr;
+  item.valueSource = nullptr;
   return &menus[id];
 }
 
@@ -124,7 +123,7 @@ void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
   item.name = name;
   item.action = nullptr;
   item.targetMenu = nullptr;
-  item.sourceValue = val;
+  item.valueSource = val;
   item.valueMin = vmin;
   item.valueMax = vmax;
   item.valueAdjustStep = vstep;

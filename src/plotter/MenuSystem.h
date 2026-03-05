@@ -13,7 +13,7 @@ struct Menu {
     const char* name;
     Action action;
     Menu* targetMenu;
-    int* sourceValue;
+    int* valueSource;
     int valueMin;
     int valueMax;
     int valueAdjustStep;
