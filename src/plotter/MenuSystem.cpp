@@ -73,55 +73,72 @@ static byte totalItems() {
   return activeMenu->item_count + (activeMenu->parentMenu ? 1 : 0);
 }
 
-void drawMenu() {
-  oled.clear();
-  oled.home();
+static void drawEditMode(const Menu::Item& item) {
+  oled.setScale(1);
+  oled.println(item.name);
+  oled.println();
+  oled.setScale(3);
+  oled.print("  ");
+  oled.println(*item.sourceValue);
+  oled.setScale(1);
+  oled.println();
+  oled.print("  [");
+  oled.print(item.valueMin);
+  oled.print(" .. ");
+  oled.print(item.valueMax);
+  oled.println("]");
+  oled.println();
+  oled.println("  Нажми для выхода");
+}
 
-  if (editMode) {
-    oled.setScale(1);
-    oled.println(activeMenu->items[cursor].name);
-    oled.println();
-    oled.setScale(3);
-    oled.print("  ");
-    oled.println(*activeMenu->items[cursor].sourceValue);
-    oled.setScale(1);
-    oled.println();
-    oled.print("  [");
-    oled.print(activeMenu->items[cursor].valueMin);
-    oled.print(" .. ");
-    oled.print(activeMenu->items[cursor].valueMax);
-    oled.println("]");
-    oled.println();
-    oled.println("  Нажми для выхода");
-    return;
+static void drawItemCommonMode(const Menu::Item& item) {
+  oled.print(item.name);
+  if (nullptr != item.targetMenu) {
+    oled.print(" >>");
+  } else if (nullptr != item.sourceValue) {
+    oled.print(": ");
+    oled.print(*item.sourceValue);
   }
+}
 
+static void drawCommonMode(const Menu& menu) {
   oled.setScale(2);
-  oled.println(activeMenu->title);
+  oled.println(menu.title);
   oled.setScale(1);
 
   byte total = totalItems();
-  if (!total) return;
+  if (0 == total) return;
 
-  if (cursor < scroll) scroll = cursor;
-  if (cursor >= scroll + MAX_MENU_ITEMS_VISIBLE) scroll = cursor - MAX_MENU_ITEMS_VISIBLE + 1;
+  if (cursor < scroll) {
+    scroll = cursor;
+  }
+  if (cursor >= scroll + MAX_MENU_ITEMS_VISIBLE) {
+    scroll = cursor - MAX_MENU_ITEMS_VISIBLE + 1;
+  }
 
   byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
 
   for (byte i = scroll; i < end; i++) {
     oled.print(i == cursor ? "> " : "  ");
-    if (i < activeMenu->item_count) {
-      oled.print(activeMenu->items[i].name);
-      if (activeMenu->items[i].targetMenu) {
-        oled.print(" >>");
-      } else if (activeMenu->items[i].sourceValue) {
-        oled.print(": ");
-        oled.print(*activeMenu->items[i].sourceValue);
-      }
+    if (i < menu.item_count) {
+      drawItemCommonMode(menu.items[i]);
     } else {
       oled.print("<< Назад");
     }
     oled.println();
+  }
+}
+
+void drawMenu() {
+  oled.clear();
+  oled.home();
+
+  if (nullptr == activeMenu) return;
+
+  if (editMode) {
+    drawEditMode(activeMenu->items[cursor]);
+  } else {
+    drawCommonMode(*activeMenu);
   }
 }
 
