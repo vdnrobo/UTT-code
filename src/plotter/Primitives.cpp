@@ -1,5 +1,7 @@
 #include "Primitives.h"
 
+#include <Arduino.h>
+
 #include "Motion.h"
 #include "Tool.hpp"
 
