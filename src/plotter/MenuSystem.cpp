@@ -10,14 +10,14 @@
 Menu menus[MAX_MENUS];
 byte menuCount = 0;
 Menu* activeMenu = nullptr;
-byte cursor = 0;
-byte scroll = 0;
+byte _ui_cursor = 0;
+byte _ui_scroll = 0;
 bool editMode = 0;
 
 static void bindMenu(Menu& menu) {
   activeMenu = &menu;
-  cursor = 0;
-  scroll = 0;
+  _ui_cursor = 0;
+  _ui_scroll = 0;
 }
 
 Menu& Menu::root() {
@@ -129,34 +129,33 @@ void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
   item.valueAdjustStep = vstep;
 }
 
-// UI
-
-static void drawCommonMode(const Menu& menu) {
+void Menu::drawItems(byte cursor, byte scroll, byte end) const {
   oled.setScale(2);
-  oled.println(menu.title);
+  oled.println(title);
   oled.setScale(1);
 
-  byte total = activeMenu->itemsTotal();
+  byte total = itemsTotal();
   if (0 == total) return;
-
-  if (cursor < scroll) {
-    scroll = cursor;
-  }
-  if (cursor >= scroll + MAX_MENU_ITEMS_VISIBLE) {
-    scroll = cursor - MAX_MENU_ITEMS_VISIBLE + 1;
-  }
-
-  byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
 
   for (byte i = scroll; i < end; i++) {
     oled.print(i == cursor ? "> " : "  ");
-    if (i < menu._itemCount) {
-      menu.items[i].drawCommonMode();
+    if (i < _itemCount) {
+      items[i].drawCommonMode();
     } else {
       oled.print("<< Назад");  // Квазивиджет
     }
     oled.println();
   }
+}
+
+void Menu::onClick(byte cursor) {
+  // Квазивиджет, чей action - установка parentMenu
+  if (nullptr != parentMenu && cursor == _itemCount) {
+    bindMenu(*parentMenu);
+    return;
+  }
+
+  items[cursor].onClick();
 }
 
 void drawMenu() {
@@ -166,9 +165,19 @@ void drawMenu() {
   if (nullptr == activeMenu) return;
 
   if (editMode) {
-    activeMenu->items[cursor].drawEditMode();
+    activeMenu->items[_ui_cursor].drawEditMode();
   } else {
-    drawCommonMode(*activeMenu);
+    // todo использовать min/max для вычислений
+    if (_ui_cursor < _ui_scroll) {
+      _ui_scroll = _ui_cursor;
+    }
+    if (_ui_cursor >= _ui_scroll + MAX_MENU_ITEMS_VISIBLE) {
+      _ui_scroll = _ui_cursor - MAX_MENU_ITEMS_VISIBLE + 1;
+    }
+
+    byte end = min(_ui_scroll + MAX_MENU_ITEMS_VISIBLE, activeMenu->itemsTotal());
+
+    activeMenu->drawItems(_ui_cursor, _ui_scroll, end);
   }
 }
 
@@ -176,27 +185,17 @@ static void adjustCursor(int delta) {
   byte total = activeMenu->itemsTotal();
   if (0 == total) return;
 
-  if (delta > 0 && cursor < total - 1) cursor++;
-  if (delta < 0 && cursor > 0) cursor--;
+  if (delta > 0 && _ui_cursor < total - 1) _ui_cursor++;
+  if (delta < 0 && _ui_cursor > 0) _ui_cursor--;
 }
 
 void menuOnValue(int delta) {
   if (editMode) {
-    activeMenu->items[cursor].onValue(delta);
+    activeMenu->items[_ui_cursor].onValue(delta);
   } else {
     adjustCursor(delta);
   }
   drawMenu();
-}
-
-static void onPageSelected(Menu& menu) {
-  // Квазивиджет, чей action - установка parentMenu
-  if (nullptr != menu.parentMenu && cursor == menu._itemCount) {
-    bindMenu(*menu.parentMenu);
-    return;
-  }
-
-  menu.items[cursor].onClick();
 }
 
 void selectItem() {
@@ -204,7 +203,7 @@ void selectItem() {
     editMode = false;
     settings.save();
   } else if (activeMenu != nullptr) {
-    onPageSelected(*activeMenu);
+    activeMenu->onClick(_ui_cursor);
   }
 
   drawMenu();

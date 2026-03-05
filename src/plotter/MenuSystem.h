@@ -17,10 +17,10 @@ struct Menu {
     int valueMin;
     int valueMax;
     int valueAdjustStep;
-  
+
     void drawEditMode() const;
     void drawCommonMode() const;
-  
+
     void onValue(int delta);
     void onClick();
   };
@@ -38,6 +38,9 @@ struct Menu {
   void addParagraph(const char* name, Action func);
   Menu* addSubmenu(const char* name);
   void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
+
+  void drawItems(byte cursor, byte scroll, byte end) const;
+  void onClick(byte cursor);
 };
 
 // STATE
@@ -45,8 +48,8 @@ struct Menu {
 extern Menu menus[MAX_MENUS];
 extern byte menuCount;
 extern Menu* activeMenu;
-extern byte cursor;
-extern byte scroll;
+extern byte _ui_cursor;
+extern byte _ui_scroll;
 extern bool editMode;
 
 // BUILDER
