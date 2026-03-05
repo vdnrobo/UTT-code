@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 // UI
 
 void showMode(byte m, bool done);

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 // EEPROM
 
 #define EEPROM_ADDR   0
