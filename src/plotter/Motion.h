@@ -5,7 +5,7 @@
 extern long posX;
 extern long posY;
 
-// CONVERTION
+// CONVERSION
 
 long mmToStepsX(float mm);
 long mmToStepsY(float mm);
