@@ -1,5 +1,4 @@
-#ifndef MARKER_H
-#define MARKER_H
+#pragma once
 
 #include <Servo.h>
 
@@ -13,5 +12,3 @@ void initMarker();
 void markerUp();
 void markerDown();
 void makeDot();
-
-#endif // MARKER_H

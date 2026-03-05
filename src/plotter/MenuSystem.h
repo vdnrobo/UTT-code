@@ -1,5 +1,4 @@
-#ifndef MENU_SYSTEM_H
-#define MENU_SYSTEM_H
+#pragma once
 
 #include <Arduino.h>
 #include "Config.h"
@@ -45,5 +44,3 @@ void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
 void drawMenu();
 void moveCursor(int d);
 void selectItem();
-
-#endif // MENU_SYSTEM_H

@@ -1,5 +1,4 @@
-#ifndef MOTION_H
-#define MOTION_H
+#pragma once
 
 // STATE
 
@@ -42,5 +41,3 @@ void moveMMY(float dy);
 
 void moveAbsMM(float x, float y);
 void moveAbsSteps(long x, long y);
-
-#endif // MOTION_H

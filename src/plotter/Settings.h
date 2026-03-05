@@ -1,5 +1,4 @@
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#pragma once
 
 // EEPROM
 
@@ -32,5 +31,3 @@ extern const Settings defaults;
 void loadSettings();
 void saveSettings();
 void resetSettings();
-
-#endif // SETTINGS_H

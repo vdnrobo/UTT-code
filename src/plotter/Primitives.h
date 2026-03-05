@@ -1,5 +1,4 @@
-#ifndef PRIMITIVES_H
-#define PRIMITIVES_H
+#pragma once
 
 // UI
 
@@ -14,5 +13,3 @@ void squareRel(float size);
 void rectRel(float w, float h);
 void lineRel(float dx, float dy);
 void diagonals(float size);
-
-#endif // PRIMITIVES_H
