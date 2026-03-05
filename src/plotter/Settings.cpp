@@ -22,9 +22,7 @@ const Settings defaults = {
   80
 };
 
-// FUNCTIONS
-
-void loadSettings() {
+void Settings::load() {
   SettingsWithMarker s;
   EEPROM.get(EEPROM_ADDR, s);
   
@@ -33,20 +31,20 @@ void loadSettings() {
     EEPROM.put(EEPROM_ADDR, s);
   }
 
-  settings = s.settings;
+  *this = s.settings;
 }
 
-void saveSettings() {
-  // put использует побайтовый update, а он уже сам заботится о минимизации износа
+void Settings::save() const {
+  // put применяет побайтово update, а он уже сам заботится о минимизации износа
   EEPROM.put(EEPROM_ADDR, SettingsWithMarker{
     .marker = EEPROM_MARKER,
-    .settings = settings, 
+    .settings = *this, 
   });
 }
 
-void resetSettings() {
-  settings = defaults;
-  saveSettings();
+void Settings::reset() {
+  *this = defaults;
+  save();
 
   // todo Вынести от сюда это всё ниже:
   oled.clear();

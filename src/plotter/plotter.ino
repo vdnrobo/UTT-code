@@ -27,7 +27,7 @@ void setup() {
   
   pinMode(13, OUTPUT);
 
-  loadSettings();
+  settings.load();
 
   initMarker();
   markerUp();

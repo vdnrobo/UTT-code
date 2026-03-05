@@ -151,7 +151,7 @@ void moveCursor(int d) {
 void selectItem() {
   if (editMode) {
     editMode = false;
-    saveSettings();
+    settings.save();
     drawMenu();
     return;
   }

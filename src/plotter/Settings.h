@@ -15,14 +15,12 @@ struct Settings {
   int  servoDown;
   int  servoWait;
   int  circleSegs; // todo Что делать с неиспользуемым полем?
+
+  void load();
+  void save() const;
+  void reset();
 };
 
 // GLOBALS
 
 extern Settings settings;
-
-// FUNCTIONS
-
-void loadSettings();
-void saveSettings();
-void resetSettings();
