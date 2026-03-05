@@ -10,13 +10,13 @@ using Action = void (*)();
 
 struct Menu {
   const char* title;
-  const char* names[MAX_ITEMS];
-  Action actions[MAX_ITEMS];
-  Menu* submenus[MAX_ITEMS];
-  int* values[MAX_ITEMS];
-  int vmins[MAX_ITEMS];
-  int vmaxs[MAX_ITEMS];
-  int vsteps[MAX_ITEMS];
+  const char* names[MAX_MENU_ITEMS];
+  Action actions[MAX_MENU_ITEMS];
+  Menu* submenus[MAX_MENU_ITEMS];
+  int* values[MAX_MENU_ITEMS];
+  int vmins[MAX_MENU_ITEMS];
+  int vmaxs[MAX_MENU_ITEMS];
+  int vsteps[MAX_MENU_ITEMS];
   Menu* parent;
   byte count;
 };
@@ -25,7 +25,7 @@ struct Menu {
 
 extern Menu menus[MAX_MENUS];
 extern byte menuCount;
-extern Menu* cur;
+extern Menu* activeMenu;
 extern byte cursor;
 extern byte scroll;
 extern bool editMode;

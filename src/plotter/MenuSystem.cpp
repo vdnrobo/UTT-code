@@ -9,7 +9,7 @@
 
 Menu menus[MAX_MENUS];
 byte menuCount = 0;
-Menu* cur = nullptr;
+Menu* activeMenu = nullptr;
 byte cursor = 0;
 byte scroll = 0;
 bool editMode = 0;
@@ -21,11 +21,11 @@ void initMenu(const char* title) {
   menus[0].title = title;
   menus[0].parent = nullptr;
   menus[0].count = 0;
-  cur = &menus[0];
+  activeMenu = &menus[0];
 }
 
 void addParagraph(Menu* m, const char* name, Action func) {
-  if (m->count >= MAX_ITEMS) return;
+  if (m->count >= MAX_MENU_ITEMS) return;
   byte i = m->count++;
   m->names[i] = name;
   m->actions[i] = func;
@@ -38,7 +38,7 @@ void addParagraph(const char* name, Action func) {
 }
 
 Menu* addSubmenu(Menu* parent, const char* name) {
-  if (menuCount >= MAX_MENUS || parent->count >= MAX_ITEMS) return nullptr;
+  if (menuCount >= MAX_MENUS || parent->count >= MAX_MENU_ITEMS) return nullptr;
   byte id = menuCount++;
   menus[id].title = name;
   menus[id].parent = parent;
@@ -57,7 +57,7 @@ Menu* addSubmenu(const char* name) {
 }
 
 void addValue(Menu* m, const char* name, int* val, int vmin, int vmax, int vstep) {
-  if (m->count >= MAX_ITEMS) return;
+  if (m->count >= MAX_MENU_ITEMS) return;
   byte i = m->count++;
   m->names[i] = name;
   m->actions[i] = nullptr;
@@ -75,7 +75,7 @@ void addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
 // UI
 
 static byte totalItems() {
-  return cur->count + (cur->parent ? 1 : 0);
+  return activeMenu->count + (activeMenu->parent ? 1 : 0);
 }
 
 void drawMenu() {
@@ -84,17 +84,17 @@ void drawMenu() {
 
   if (editMode) {
     oled.setScale(1);
-    oled.println(cur->names[cursor]);
+    oled.println(activeMenu->names[cursor]);
     oled.println();
     oled.setScale(3);
     oled.print("  ");
-    oled.println(*cur->values[cursor]);
+    oled.println(*activeMenu->values[cursor]);
     oled.setScale(1);
     oled.println();
     oled.print("  [");
-    oled.print(cur->vmins[cursor]);
+    oled.print(activeMenu->vmins[cursor]);
     oled.print(" .. ");
-    oled.print(cur->vmaxs[cursor]);
+    oled.print(activeMenu->vmaxs[cursor]);
     oled.println("]");
     oled.println();
     oled.println("  Нажми для выхода");
@@ -102,26 +102,26 @@ void drawMenu() {
   }
 
   oled.setScale(2);
-  oled.println(cur->title);
+  oled.println(activeMenu->title);
   oled.setScale(1);
 
   byte total = totalItems();
   if (!total) return;
 
   if (cursor < scroll) scroll = cursor;
-  if (cursor >= scroll + VISIBLE) scroll = cursor - VISIBLE + 1;
+  if (cursor >= scroll + MAX_MENU_ITEMS_VISIBLE) scroll = cursor - MAX_MENU_ITEMS_VISIBLE + 1;
 
-  byte end = min(scroll + VISIBLE, total);
+  byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
 
   for (byte i = scroll; i < end; i++) {
     oled.print(i == cursor ? "> " : "  ");
-    if (i < cur->count) {
-      oled.print(cur->names[i]);
-      if (cur->submenus[i]) {
+    if (i < activeMenu->count) {
+      oled.print(activeMenu->names[i]);
+      if (activeMenu->submenus[i]) {
         oled.print(" >>");
-      } else if (cur->values[i]) {
+      } else if (activeMenu->values[i]) {
         oled.print(": ");
-        oled.print(*cur->values[i]);
+        oled.print(*activeMenu->values[i]);
       }
     } else {
       oled.print("<< Назад");
@@ -132,10 +132,10 @@ void drawMenu() {
 
 void moveCursor(int d) {
   if (editMode) {
-    int* v = cur->values[cursor];
-    *v += d * cur->vsteps[cursor];
-    if (*v < cur->vmins[cursor]) *v = cur->vmins[cursor];
-    if (*v > cur->vmaxs[cursor]) *v = cur->vmaxs[cursor];
+    int* v = activeMenu->values[cursor];
+    *v += d * activeMenu->vsteps[cursor];
+    if (*v < activeMenu->vmins[cursor]) *v = activeMenu->vmins[cursor];
+    if (*v > activeMenu->vmaxs[cursor]) *v = activeMenu->vmaxs[cursor];
     drawMenu();
     return;
   }
@@ -155,28 +155,28 @@ void selectItem() {
     return;
   }
 
-  if (cur->parent && cursor == cur->count) {
-    cur = cur->parent;
+  if (activeMenu->parent && cursor == activeMenu->count) {
+    activeMenu = activeMenu->parent;
     cursor = scroll = 0;
     drawMenu();
     return;
   }
 
-  if (cur->submenus[cursor]) {
-    cur = cur->submenus[cursor];
+  if (activeMenu->submenus[cursor]) {
+    activeMenu = activeMenu->submenus[cursor];
     cursor = scroll = 0;
     drawMenu();
     return;
   }
 
-  if (cur->values[cursor]) {
+  if (activeMenu->values[cursor]) {
     editMode = true;
     drawMenu();
     return;
   }
 
-  if (cur->actions[cursor]) {
-    cur->actions[cursor]();
+  if (activeMenu->actions[cursor]) {
+    activeMenu->actions[cursor]();
     drawMenu();
   }
 }

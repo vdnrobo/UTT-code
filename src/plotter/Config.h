@@ -35,6 +35,6 @@
 
 // MENU LIMITS
 
-#define MAX_ITEMS 16
+#define MAX_MENU_ITEMS 16
 #define MAX_MENUS 12
-#define VISIBLE 5
+#define MAX_MENU_ITEMS_VISIBLE 5
