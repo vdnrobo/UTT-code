@@ -10,21 +10,16 @@
 // SETTINGS
 
 struct Settings {
-  byte marker;
   int  stepDelay;
   int  servoUp;
   int  servoDown;
   int  servoWait;
-  int  circleSegs;
+  int  circleSegs; // todo Что делать с неиспользуемым полем?
 };
 
 // GLOBALS
 
-extern int stepDelay;
-extern int servoUp;
-extern int servoDown;
-extern int servoWait;
-extern int circleSegs;
+extern Settings settings;
 
 // FUNCTIONS
 

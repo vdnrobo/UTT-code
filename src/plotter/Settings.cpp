@@ -5,16 +5,16 @@
 
 extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
 
+struct SettingsWithMarker {
+  byte marker;
+  Settings settings;
+};
+
 // GLOBALS
 
-int stepDelay;
-int servoUp;
-int servoDown;
-int servoWait;
-int circleSegs;
+Settings settings;
 
 const Settings defaults = {
-  EEPROM_MARKER,
   300,
   80,
   50,
@@ -25,43 +25,30 @@ const Settings defaults = {
 // FUNCTIONS
 
 void loadSettings() {
-  Settings s;
+  SettingsWithMarker s;
   EEPROM.get(EEPROM_ADDR, s);
+  
   if (s.marker != EEPROM_MARKER) {
-    s = defaults;
+    s.settings = defaults;
     EEPROM.put(EEPROM_ADDR, s);
   }
-  stepDelay = s.stepDelay;
-  servoUp = s.servoUp;
-  servoDown = s.servoDown;
-  servoWait = s.servoWait;
-  circleSegs = s.circleSegs;
+
+  settings = s.settings;
 }
 
 void saveSettings() {
-  Settings s;
-  s.marker = EEPROM_MARKER;
-  s.stepDelay = stepDelay;
-  s.servoUp = servoUp;
-  s.servoDown = servoDown;
-  s.servoWait = servoWait;
-  s.circleSegs = circleSegs;
-
-  Settings old;
-  EEPROM.get(EEPROM_ADDR, old);
-  if (memcmp(&s, &old, sizeof(Settings)) != 0) {
-    EEPROM.put(EEPROM_ADDR, s);
-  }
+  // put использует побайтовый update, а он уже сам заботится о минимизации износа
+  EEPROM.put(EEPROM_ADDR, SettingsWithMarker{
+    .marker = EEPROM_MARKER,
+    .settings = settings, 
+  });
 }
 
 void resetSettings() {
-  stepDelay = defaults.stepDelay;
-  servoUp = defaults.servoUp;
-  servoDown = defaults.servoDown;
-  servoWait = defaults.servoWait;
-  circleSegs = defaults.circleSegs;
+  settings = defaults;
   saveSettings();
 
+  // todo Вынести от сюда это всё ниже:
   oled.clear();
   oled.home();
   oled.setScale(2);

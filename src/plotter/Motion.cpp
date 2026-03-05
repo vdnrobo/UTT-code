@@ -114,7 +114,7 @@ void moveTicksXY(long tx, long ty) {
     errY += ty;
     if (errX >= maxT) { stepX(dirX); errX -= maxT; }
     if (errY >= maxT) { stepY(dirY); errY -= maxT; }
-    delayMicroseconds(stepDelay);
+    delayMicroseconds(settings.stepDelay);
   }
 }
 
@@ -123,7 +123,7 @@ void moveTicksX(long t) {
   t = abs(t);
   for (long i = 0; i < t; i++) {
     stepX(dir);
-    delayMicroseconds(stepDelay);
+    delayMicroseconds(settings.stepDelay);
   }
 }
 
@@ -132,7 +132,7 @@ void moveTicksY(long t) {
   t = abs(t);
   for (long i = 0; i < t; i++) {
     stepY(dir);
-    delayMicroseconds(stepDelay);
+    delayMicroseconds(settings.stepDelay);
   }
 }
 
