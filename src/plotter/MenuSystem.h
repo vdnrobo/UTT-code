@@ -1,11 +1,12 @@
 #pragma once
 
 #include <Arduino.h>
+
 #include "Config.h"
 
 // TYPES
 
-using Action = void(*)();
+using Action = void (*)();
 
 struct Menu {
   const char* title;
