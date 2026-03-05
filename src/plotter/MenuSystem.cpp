@@ -50,6 +50,7 @@ void Menu::Item::drawCommonMode() const {
   oled.print(name);
   if (nullptr != targetMenu) {
     oled.print(" >>");
+    oled.print(targetMenu->title);
   } else if (nullptr != sourceValue) {
     oled.print(": ");
     oled.print(*sourceValue);
