@@ -1,14 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
-
-// EEPROM
-
-#define EEPROM_ADDR   0
-#define EEPROM_MARKER 0xAB
-
-// SETTINGS
-
 struct Settings {
   int  stepDelay;
   int  servoUp;

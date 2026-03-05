@@ -3,16 +3,15 @@
 
 #include "Settings.h"
 
+#define EEPROM_ADDR   0
+#define EEPROM_MARKER 0xAB
+
 extern GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
 
 struct SettingsWithMarker {
   byte marker;
   Settings settings;
 };
-
-// GLOBALS
-
-Settings settings;
 
 const Settings defaults = {
   300,
@@ -57,3 +56,5 @@ void Settings::reset() {
   oled.println("умолчанию");
   delay(1500);
 }
+
+Settings settings;
