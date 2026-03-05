@@ -32,7 +32,11 @@ void Menu::Item::drawEditMode() const {
   oled.println();
   oled.setScale(3);
   oled.print("  ");
-  oled.println(*valueSource);
+  if (nullptr == valueSource) {
+    oled.println("null");
+  } else {
+    oled.println(*valueSource);
+  }
   oled.setScale(1);
   oled.println();
   oled.print("  [");
@@ -132,14 +136,15 @@ void Menu::drawItems(byte cursor) const {
   oled.println(title);
   oled.setScale(1);
 
-  byte total = itemsTotal();
+  const byte total = itemsTotal();
   if (0 == total) return;
 
-  byte scroll = calcScroll(cursor);
-  byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
+  const byte scroll = calcScroll(cursor);
+  const byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
 
   for (byte i = scroll; i < end; i++) {
-    oled.print(i == cursor ? "> " : "  ");
+    oled.write(i == cursor ? '>' : ' ');
+    oled.write(' ');
     if (i < _itemCount) {
       items[i].drawCommonMode();
     } else {
@@ -173,7 +178,7 @@ void drawMenu() {
 }
 
 static void adjustCursor(int delta) {
-  byte total = activeMenu->itemsTotal();
+  const byte total = activeMenu->itemsTotal();
   if (0 == total) return;
 
   if (delta > 0 && _ui_cursor < total - 1) _ui_cursor++;
@@ -200,12 +205,12 @@ void selectItem() {
   drawMenu();
 }
 
-void showMode(byte m, bool done) {
+void showMode(byte mode, bool done) {
   oled.clear();
   oled.home();
   oled.setScale(2);
   oled.print("Режим ");
-  oled.println(m);
+  oled.println(mode);
   oled.setScale(1);
   oled.println();
   oled.println(done ? "Выполнен" : "Выполняется");
@@ -217,7 +222,7 @@ void showMessage(const char* line1, const char* line2) {
   oled.setScale(2);
   oled.println(line1);
   oled.setScale(1);
-  if (line2) {
+  if (nullptr != line2) {
     oled.println();
     oled.println(line2);
   }
