@@ -4,6 +4,8 @@
 
 #include "ArrayList.hpp"
 #include "Config.h"
+#include "Oled.hpp"
+#include "Settings.h"
 
 // TYPES
 
@@ -33,8 +35,6 @@ struct Menu {
 
   ArrayList<Item, MAX_MENU_ITEMS> items{};
 
-  static Menu& root();
-
   void addParagraph(const char* name, Action func);
   Menu* addSubmenu(const char* name);
   void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
@@ -52,15 +52,79 @@ struct Menu {
   }
 };
 
-// BUILDER
+struct UI {
+  Menu& root() { return _menus[0]; }
 
-void initMenu(const char* title);
+  void initMenu(const char* title) {
+    Menu root_menu;
+    root_menu.title = title;
+    root_menu.parentMenu = nullptr;
+    root_menu.items.clear();
+
+    _menus.push(root_menu);
+    _activeMenu = &root();
+  }
+
+  void draw() {
+    oled.clear();
+    oled.home();
+
+    if (nullptr == _activeMenu) return;
+
+    if (editMode) {
+      _activeMenu->items[_cursor].drawEditMode();
+    } else {
+      _activeMenu->drawItems(_cursor);
+    }
+  }
+
+  void onValue(int delta) {
+    if (editMode) {
+      _activeMenu->items[_cursor].onValue(delta);
+    } else {
+      adjustCursor(delta);
+    }
+    draw();
+  }
+
+  void onClick() {
+    if (editMode) {
+      editMode = false;
+      settings.save();
+    } else if (_activeMenu != nullptr) {
+      _activeMenu->onClick(_cursor);
+    }
+    draw();
+  }
+
+  void bind(Menu& menu) {
+    _activeMenu = &menu;
+    _cursor = 0;
+  }
+
+  ArrayList<Menu, MAX_MENUS> _menus{};
+
+private:
+  Menu* _activeMenu{nullptr};
+  byte _cursor{0};
+
+public:
+  bool editMode{false};
+
+private:
+  void adjustCursor(int delta) {
+    const byte total = _activeMenu->itemsTotal();
+    if (0 == total) return;
+
+    if (delta > 0 && _cursor < total - 1) _cursor++;
+    if (delta < 0 && _cursor > 0) _cursor--;
+  }
+};
+
+extern UI ui;
 
 // UI
 
-void drawMenu();
-void menuOnValue(int delta);
-void selectItem();
 void showMode(byte m, bool done);
 void showMessage(const char* line1, const char* line2 = nullptr);
 void showResetMessage();

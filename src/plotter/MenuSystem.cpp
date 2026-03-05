@@ -1,73 +1,5 @@
 #include "MenuSystem.h"
 
-#include <Arduino.h>
-
-#include "Oled.hpp"
-#include "Settings.h"
-
-// STATE
-
-ArrayList<Menu, MAX_MENUS> menus{};
-Menu* activeMenu = nullptr;
-byte _ui_cursor = 0;
-bool editMode = 0;
-
-static void bindMenu(Menu& menu) {
-  activeMenu = &menu;
-  _ui_cursor = 0;
-}
-
-void initMenu(const char* title) {
-  Menu root_menu;
-  root_menu.title = title;
-  root_menu.parentMenu = nullptr;
-  root_menu.items.clear();
-
-  menus.push(root_menu);
-  activeMenu = &Menu::root();
-}
-
-void drawMenu() {
-  oled.clear();
-  oled.home();
-
-  if (nullptr == activeMenu) return;
-
-  if (editMode) {
-    activeMenu->items[_ui_cursor].drawEditMode();
-  } else {
-    activeMenu->drawItems(_ui_cursor);
-  }
-}
-
-static void adjustCursor(int delta) {
-  const byte total = activeMenu->itemsTotal();
-  if (0 == total) return;
-
-  if (delta > 0 && _ui_cursor < total - 1) _ui_cursor++;
-  if (delta < 0 && _ui_cursor > 0) _ui_cursor--;
-}
-
-void menuOnValue(int delta) {
-  if (editMode) {
-    activeMenu->items[_ui_cursor].onValue(delta);
-  } else {
-    adjustCursor(delta);
-  }
-  drawMenu();
-}
-
-void selectItem() {
-  if (editMode) {
-    editMode = false;
-    settings.save();
-  } else if (activeMenu != nullptr) {
-    activeMenu->onClick(_ui_cursor);
-  }
-
-  drawMenu();
-}
-
 void Item::drawEditMode() const {
   oled.setScale(1);
   oled.println(name);
@@ -109,12 +41,12 @@ void Item::onValue(int delta) {
 
 void Item::onClick() {
   if (nullptr != targetMenu) {
-    bindMenu(*targetMenu);
+    ui.bind(*targetMenu);
     return;
   }
 
   if (nullptr != valueSource) {
-    editMode = true;
+    ui.editMode = true;
     return;
   }
 
@@ -122,10 +54,6 @@ void Item::onClick() {
     action();
     return;
   }
-}
-
-Menu& Menu::root() {
-  return menus[0];
 }
 
 void Menu::addParagraph(const char* name, Action func) {
@@ -139,19 +67,19 @@ void Menu::addParagraph(const char* name, Action func) {
 }
 
 Menu* Menu::addSubmenu(const char* name) {
-  if (menus.full() || items.full()) return nullptr;
+  if (ui._menus.full() || items.full()) return nullptr;
   Menu sub_menu;
   sub_menu.title = name;
   sub_menu.parentMenu = parentMenu;
-  menus.push(sub_menu);
+  ui._menus.push(sub_menu);
 
   Item item;
   item.name = name;
   item.action = nullptr;
-  item.targetMenu = &menus.back();
+  item.targetMenu = &ui._menus.back();
   item.valueSource = nullptr;
   items.push(item);
-  return &menus.back();
+  return &ui._menus.back();
 }
 
 void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
@@ -193,7 +121,7 @@ void Menu::drawItems(byte cursor) const {
 void Menu::onClick(byte cursor) {
   // Квазивиджет, чей action - установка parentMenu
   if (nullptr != parentMenu && cursor == items.size()) {
-    bindMenu(*parentMenu);
+    ui.bind(*parentMenu);
     return;
   }
 

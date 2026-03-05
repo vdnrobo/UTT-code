@@ -13,6 +13,7 @@
 Oled oled{};
 Encoder enc{ENC_A, ENC_B, ENC_SW};
 Tool tool{};
+UI ui{};
 
 // DRAWING MODES
 // А что здесь будет? Перечисление? Процедуры?
@@ -39,14 +40,13 @@ void setup() {
 
   // MENU CONFIGURATION
 
-  initMenu("ГЛАВНАЯ");
-
-  drawMenu();
+  ui.initMenu("ГЛАВНАЯ");
+  ui.draw();
 }
 
 void loop() {
   enc.tick();
-  if (enc.isRight()) menuOnValue(1);
-  if (enc.isLeft()) menuOnValue(-1);
-  if (enc.isClick()) selectItem();
+  if (enc.isRight()) ui.onValue(1);
+  if (enc.isLeft()) ui.onValue(-1);
+  if (enc.isClick()) ui.onClick();
 }
