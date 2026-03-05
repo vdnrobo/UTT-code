@@ -43,15 +43,6 @@ struct Menu {
   void onClick(byte cursor);
 };
 
-// STATE
-
-extern Menu menus[MAX_MENUS];
-extern byte menuCount;
-extern Menu* activeMenu;
-extern byte _ui_cursor;
-extern byte _ui_scroll;
-extern bool editMode;
-
 // BUILDER
 
 void initMenu(const char* title);
