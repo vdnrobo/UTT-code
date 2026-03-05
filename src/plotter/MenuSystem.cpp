@@ -22,7 +22,7 @@ Menu& Menu::root() {
 
 void initMenu(const char* title) {
   Menu::root().title = title;
-  Menu::root().parent = nullptr;
+  Menu::root().parentMenu = nullptr;
   Menu::root().item_count = 0;
   menuCount = 1;
   activeMenu = &Menu::root();
@@ -32,25 +32,25 @@ void Menu::addParagraph(const char* name, Action func) {
   if (item_count >= MAX_MENU_ITEMS) return;
   byte i = item_count++;
   auto& item = items[i];
-  item.names = name;
-  item.actions = func;
-  item.submenus = nullptr;
-  item.values = nullptr;
+  item.name = name;
+  item.action = func;
+  item.targetMenu = nullptr;
+  item.sourceValue = nullptr;
 }
 
 Menu* Menu::addSubmenu(const char* name) {
   if (menuCount >= MAX_MENUS || item_count >= MAX_MENU_ITEMS) return nullptr;
   byte id = menuCount++;
   menus[id].title = name;
-  menus[id].parent = parent;
+  menus[id].parentMenu = parentMenu;
   menus[id].item_count = 0;
 
   byte i = item_count++;
   auto& item = items[i];
-  item.names = name;
-  item.actions = nullptr;
-  item.submenus = &menus[id];
-  item.values = nullptr;
+  item.name = name;
+  item.action = nullptr;
+  item.targetMenu = &menus[id];
+  item.sourceValue = nullptr;
   return &menus[id];
 }
 
@@ -58,19 +58,19 @@ void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
   if (item_count >= MAX_MENU_ITEMS) return;
   byte i = item_count++;
   auto& item = items[i];
-  item.names = name;
-  item.actions = nullptr;
-  item.submenus = nullptr;
-  item.values = val;
-  item.vmins = vmin;
-  item.vmaxs = vmax;
-  item.vsteps = vstep;
+  item.name = name;
+  item.action = nullptr;
+  item.targetMenu = nullptr;
+  item.sourceValue = val;
+  item.valueMin = vmin;
+  item.valueMax = vmax;
+  item.valueAdjustStep = vstep;
 }
 
 // UI
 
 static byte totalItems() {
-  return activeMenu->item_count + (activeMenu->parent ? 1 : 0);
+  return activeMenu->item_count + (activeMenu->parentMenu ? 1 : 0);
 }
 
 void drawMenu() {
@@ -79,17 +79,17 @@ void drawMenu() {
 
   if (editMode) {
     oled.setScale(1);
-    oled.println(activeMenu->items[cursor].names);
+    oled.println(activeMenu->items[cursor].name);
     oled.println();
     oled.setScale(3);
     oled.print("  ");
-    oled.println(*activeMenu->items[cursor].values);
+    oled.println(*activeMenu->items[cursor].sourceValue);
     oled.setScale(1);
     oled.println();
     oled.print("  [");
-    oled.print(activeMenu->items[cursor].vmins);
+    oled.print(activeMenu->items[cursor].valueMin);
     oled.print(" .. ");
-    oled.print(activeMenu->items[cursor].vmaxs);
+    oled.print(activeMenu->items[cursor].valueMax);
     oled.println("]");
     oled.println();
     oled.println("  Нажми для выхода");
@@ -111,12 +111,12 @@ void drawMenu() {
   for (byte i = scroll; i < end; i++) {
     oled.print(i == cursor ? "> " : "  ");
     if (i < activeMenu->item_count) {
-      oled.print(activeMenu->items[i].names);
-      if (activeMenu->items[i].submenus) {
+      oled.print(activeMenu->items[i].name);
+      if (activeMenu->items[i].targetMenu) {
         oled.print(" >>");
-      } else if (activeMenu->items[i].values) {
+      } else if (activeMenu->items[i].sourceValue) {
         oled.print(": ");
-        oled.print(*activeMenu->items[i].values);
+        oled.print(*activeMenu->items[i].sourceValue);
       }
     } else {
       oled.print("<< Назад");
@@ -127,10 +127,10 @@ void drawMenu() {
 
 void moveCursor(int d) {
   if (editMode) {
-    int* v = activeMenu->items[cursor].values;
-    *v += d * activeMenu->items[cursor].vsteps;
-    if (*v < activeMenu->items[cursor].vmins) *v = activeMenu->items[cursor].vmins;
-    if (*v > activeMenu->items[cursor].vmaxs) *v = activeMenu->items[cursor].vmaxs;
+    int* v = activeMenu->items[cursor].sourceValue;
+    *v += d * activeMenu->items[cursor].valueAdjustStep;
+    if (*v < activeMenu->items[cursor].valueMin) *v = activeMenu->items[cursor].valueMin;
+    if (*v > activeMenu->items[cursor].valueMax) *v = activeMenu->items[cursor].valueMax;
     drawMenu();
     return;
   }
@@ -150,28 +150,28 @@ void selectItem() {
     return;
   }
 
-  if (activeMenu->parent && cursor == activeMenu->item_count) {
-    activeMenu = activeMenu->parent;
+  if (activeMenu->parentMenu && cursor == activeMenu->item_count) {
+    activeMenu = activeMenu->parentMenu;
     cursor = scroll = 0;
     drawMenu();
     return;
   }
 
-  if (activeMenu->items[cursor].submenus) {
-    activeMenu = activeMenu->items[cursor].submenus;
+  if (activeMenu->items[cursor].targetMenu) {
+    activeMenu = activeMenu->items[cursor].targetMenu;
     cursor = scroll = 0;
     drawMenu();
     return;
   }
 
-  if (activeMenu->items[cursor].values) {
+  if (activeMenu->items[cursor].sourceValue) {
     editMode = true;
     drawMenu();
     return;
   }
 
-  if (activeMenu->items[cursor].actions) {
-    activeMenu->items[cursor].actions();
+  if (activeMenu->items[cursor].action) {
+    activeMenu->items[cursor].action();
     drawMenu();
   }
 }

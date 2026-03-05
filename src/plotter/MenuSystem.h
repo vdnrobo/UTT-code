@@ -10,17 +10,17 @@ using Action = void (*)();
 
 struct Menu {
   struct Item {
-    const char* names; 
-    Action actions;
-    Menu* submenus;
-    int* values;
-    int vmins;
-    int vmaxs;
-    int vsteps;
+    const char* name;
+    Action action;
+    Menu* targetMenu;
+    int* sourceValue;
+    int valueMin;
+    int valueMax;
+    int valueAdjustStep;
   };
 
   const char* title;
-  Menu* parent;
+  Menu* parentMenu;
 
   Item items[MAX_MENU_ITEMS];
   byte item_count;
