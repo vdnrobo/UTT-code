@@ -17,15 +17,58 @@ static void bindMenu(Menu& menu) {
   _ui_cursor = 0;
 }
 
-Menu& Menu::root() {
-  return menus[0];
+void initMenu(const char* title) {
+  Menu root_menu;
+  root_menu.title = title;
+  root_menu.parentMenu = nullptr;
+  root_menu.items.clear();
+
+  menus.push(root_menu);
+  activeMenu = &Menu::root();
 }
 
-byte Menu::itemsTotal() const {
-  return items.size() + (nullptr != parentMenu ? 1 : 0);
+void drawMenu() {
+  oled.clear();
+  oled.home();
+
+  if (nullptr == activeMenu) return;
+
+  if (editMode) {
+    activeMenu->items[_ui_cursor].drawEditMode();
+  } else {
+    activeMenu->drawItems(_ui_cursor);
+  }
 }
 
-void Menu::Item::drawEditMode() const {
+static void adjustCursor(int delta) {
+  const byte total = activeMenu->itemsTotal();
+  if (0 == total) return;
+
+  if (delta > 0 && _ui_cursor < total - 1) _ui_cursor++;
+  if (delta < 0 && _ui_cursor > 0) _ui_cursor--;
+}
+
+void menuOnValue(int delta) {
+  if (editMode) {
+    activeMenu->items[_ui_cursor].onValue(delta);
+  } else {
+    adjustCursor(delta);
+  }
+  drawMenu();
+}
+
+void selectItem() {
+  if (editMode) {
+    editMode = false;
+    settings.save();
+  } else if (activeMenu != nullptr) {
+    activeMenu->onClick(_ui_cursor);
+  }
+
+  drawMenu();
+}
+
+void Item::drawEditMode() const {
   oled.setScale(1);
   oled.println(name);
   oled.println();
@@ -47,7 +90,7 @@ void Menu::Item::drawEditMode() const {
   oled.println("  Нажми для выхода");
 }
 
-void Menu::Item::drawCommonMode() const {
+void Item::drawCommonMode() const {
   oled.print(name);
   if (nullptr != targetMenu) {
     oled.print(" >>");
@@ -58,13 +101,13 @@ void Menu::Item::drawCommonMode() const {
   }
 }
 
-void Menu::Item::onValue(int delta) {
+void Item::onValue(int delta) {
   if (nullptr == valueSource) return;
   *valueSource += delta * valueAdjustStep;
   *valueSource = constrain(*valueSource, valueMin, valueMax);
 }
 
-void Menu::Item::onClick() {
+void Item::onClick() {
   if (nullptr != targetMenu) {
     bindMenu(*targetMenu);
     return;
@@ -81,16 +124,8 @@ void Menu::Item::onClick() {
   }
 }
 
-// BUILDER
-
-void initMenu(const char* title) {
-  Menu root_menu;
-  root_menu.title = title;
-  root_menu.parentMenu = nullptr;
-  root_menu.items.clear();
-
-  menus.push(root_menu);
-  activeMenu = &Menu::root();
+Menu& Menu::root() {
+  return menus[0];
 }
 
 void Menu::addParagraph(const char* name, Action func) {
@@ -163,47 +198,6 @@ void Menu::onClick(byte cursor) {
   }
 
   items[cursor].onClick();
-}
-
-void drawMenu() {
-  oled.clear();
-  oled.home();
-
-  if (nullptr == activeMenu) return;
-
-  if (editMode) {
-    activeMenu->items[_ui_cursor].drawEditMode();
-  } else {
-    activeMenu->drawItems(_ui_cursor);
-  }
-}
-
-static void adjustCursor(int delta) {
-  const byte total = activeMenu->itemsTotal();
-  if (0 == total) return;
-
-  if (delta > 0 && _ui_cursor < total - 1) _ui_cursor++;
-  if (delta < 0 && _ui_cursor > 0) _ui_cursor--;
-}
-
-void menuOnValue(int delta) {
-  if (editMode) {
-    activeMenu->items[_ui_cursor].onValue(delta);
-  } else {
-    adjustCursor(delta);
-  }
-  drawMenu();
-}
-
-void selectItem() {
-  if (editMode) {
-    editMode = false;
-    settings.save();
-  } else if (activeMenu != nullptr) {
-    activeMenu->onClick(_ui_cursor);
-  }
-
-  drawMenu();
 }
 
 void showMode(byte mode, bool done) {
