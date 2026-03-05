@@ -5,13 +5,14 @@
 #include "Settings.h"
 #include "MenuSystem.h"
 #include "Motion.h"
-#include "Marker.h"
 #include "Primitives.h"
+#include "Tool.hpp"
 
 // GLOBAL OBJECTS
 
 GyverOLED<SSH1106_128x64, OLED_NO_BUFFER> oled;
 Encoder enc(ENC_A, ENC_B, ENC_SW);
+Tool tool{};
 
 // DRAWING MODES
 
@@ -25,12 +26,12 @@ void setup() {
   pinMode(BTN_X, INPUT);
   pinMode(BTN_Y, INPUT);
   
-  pinMode(13, OUTPUT);
+  pinMode(13, OUTPUT); // LED_BUILTIN??
 
   settings.load();
 
-  initMarker();
-  markerUp();
+  tool.enable();
+  tool.up();
 
   enc.setType(TYPE2);
   enc.setFastTimeout(30);
