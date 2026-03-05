@@ -33,8 +33,6 @@ void showMessage(const char* line1, const char* line2) {
   }
 }
 
-// PRIMITIVES
-
 void circleRel(float r, int seg) {
   float step = 2.0 * PI / seg;
   float x0 = r, y0 = 0;

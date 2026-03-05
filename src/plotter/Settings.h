@@ -17,7 +17,7 @@ struct Settings {
   int  circleSegs;
 };
 
-// GLOABALS
+// GLOBALS
 
 extern int stepDelay;
 extern int servoUp;
