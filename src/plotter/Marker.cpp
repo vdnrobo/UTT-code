@@ -15,13 +15,13 @@ void initMarker() {
 }
 
 void markerUp() {
-  servo.write(settings.servoUp);
-  delay(settings.servoWait);
+  servo.write(settings.servoAngleUp);
+  delay(settings.servoWaitMs);
 }
 
 void markerDown() {
-  servo.write(settings.servoDown);
-  delay(settings.servoWait);
+  servo.write(settings.servoAngleDown);
+  delay(settings.servoWaitMs);
 }
 
 void makeDot() {

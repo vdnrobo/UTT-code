@@ -13,12 +13,12 @@ struct SettingsWithMarker {
   Settings settings;
 };
 
-const Settings defaults = {
-  300,
-  80,
-  50,
-  700,
-  80
+constexpr Settings defaults {
+  .stepDelay = 300,
+  .servoAngleUp = 80,
+  .servoAngleDown = 50,
+  .servoWaitMs = 700,
+  .circleSegs = 80,
 };
 
 void Settings::load() {
