@@ -7,8 +7,7 @@
 
 // STATE
 
-Menu menus[MAX_MENUS];
-byte menuCount = 0;
+ArrayList<Menu, MAX_MENUS> menus{};
 Menu* activeMenu = nullptr;
 byte _ui_cursor = 0;
 bool editMode = 0;
@@ -85,10 +84,12 @@ void Menu::Item::onClick() {
 // BUILDER
 
 void initMenu(const char* title) {
-  Menu::root().title = title;
-  Menu::root().parentMenu = nullptr;
-  Menu::root().items.clear();
-  menuCount = 1;
+  Menu root_menu;
+  root_menu.title = title;
+  root_menu.parentMenu = nullptr;
+  root_menu.items.clear();
+
+  menus.push(root_menu);
   activeMenu = &Menu::root();
 }
 
@@ -103,18 +104,19 @@ void Menu::addParagraph(const char* name, Action func) {
 }
 
 Menu* Menu::addSubmenu(const char* name) {
-  if (menuCount >= MAX_MENUS || items.full()) return nullptr;
-  byte id = menuCount++;
-  menus[id].title = name;
-  menus[id].parentMenu = parentMenu;
+  if (menus.full() || items.full()) return nullptr;
+  Menu sub_menu;
+  sub_menu.title = name;
+  sub_menu.parentMenu = parentMenu;
+  menus.push(sub_menu);
 
   Item item;
   item.name = name;
   item.action = nullptr;
-  item.targetMenu = &menus[id];
+  item.targetMenu = &menus.back();
   item.valueSource = nullptr;
   items.push(item);
-  return &menus[id];
+  return &menus.back();
 }
 
 void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {

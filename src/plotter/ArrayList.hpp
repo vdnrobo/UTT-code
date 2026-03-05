@@ -26,11 +26,13 @@ public:
 
   const T& operator[](unsigned char index) const { return _data[index]; }
 
+  T& back() { return *(_top - 1); }
+
   unsigned char size() const { return _top - _data; }
 
   bool empty() const { return _top == _data; }
 
   void clear() { _top = _data; }
-  
+
   bool full() const { return _top == _data + N; }
 };
