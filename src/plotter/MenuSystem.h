@@ -39,8 +39,15 @@ struct Menu {
   Menu* addSubmenu(const char* name);
   void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
 
-  void drawItems(byte cursor, byte scroll, byte end) const;
+  void drawItems(byte cursor) const;
   void onClick(byte cursor);
+
+  byte maxScroll() const { return max(0, itemsTotal() - MAX_MENU_ITEMS_VISIBLE); }
+
+  byte calcScroll(byte cursor) const {
+    byte max_scroll = maxScroll();
+    return min(max(cursor - (MAX_MENU_ITEMS_VISIBLE - 1), 0), max_scroll);
+  }
 };
 
 // BUILDER

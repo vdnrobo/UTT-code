@@ -11,13 +11,11 @@ Menu menus[MAX_MENUS];
 byte menuCount = 0;
 Menu* activeMenu = nullptr;
 byte _ui_cursor = 0;
-byte _ui_scroll = 0;
 bool editMode = 0;
 
 static void bindMenu(Menu& menu) {
   activeMenu = &menu;
   _ui_cursor = 0;
-  _ui_scroll = 0;
 }
 
 Menu& Menu::root() {
@@ -129,13 +127,16 @@ void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
   item.valueAdjustStep = vstep;
 }
 
-void Menu::drawItems(byte cursor, byte scroll, byte end) const {
+void Menu::drawItems(byte cursor) const {
   oled.setScale(2);
   oled.println(title);
   oled.setScale(1);
 
   byte total = itemsTotal();
   if (0 == total) return;
+
+  byte scroll = calcScroll(cursor);
+  byte end = min(scroll + MAX_MENU_ITEMS_VISIBLE, total);
 
   for (byte i = scroll; i < end; i++) {
     oled.print(i == cursor ? "> " : "  ");
@@ -167,17 +168,7 @@ void drawMenu() {
   if (editMode) {
     activeMenu->items[_ui_cursor].drawEditMode();
   } else {
-    // todo использовать min/max для вычислений
-    if (_ui_cursor < _ui_scroll) {
-      _ui_scroll = _ui_cursor;
-    }
-    if (_ui_cursor >= _ui_scroll + MAX_MENU_ITEMS_VISIBLE) {
-      _ui_scroll = _ui_cursor - MAX_MENU_ITEMS_VISIBLE + 1;
-    }
-
-    byte end = min(_ui_scroll + MAX_MENU_ITEMS_VISIBLE, activeMenu->itemsTotal());
-
-    activeMenu->drawItems(_ui_cursor, _ui_scroll, end);
+    activeMenu->drawItems(_ui_cursor);
   }
 }
 
