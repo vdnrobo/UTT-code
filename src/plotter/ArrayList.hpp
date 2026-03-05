@@ -31,4 +31,6 @@ public:
   bool empty() const { return _top == _data; }
 
   void clear() { _top = _data; }
+  
+  bool full() const { return _top == _data + N; }
 };
