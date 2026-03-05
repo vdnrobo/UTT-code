@@ -19,3 +19,6 @@ clean:
 
 monitor:
 	$(CLI) monitor -p $(PORT)
+
+shapshot:
+	python shapshot.py
