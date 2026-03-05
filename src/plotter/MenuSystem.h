@@ -19,6 +19,10 @@ struct Menu {
   int vsteps[MAX_MENU_ITEMS];
   Menu* parent;
   byte count;
+
+  void addParagraph(const char* name, Action func);
+  Menu* addSubmenu(const char* name);
+  void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
 };
 
 // STATE
@@ -33,11 +37,8 @@ extern bool editMode;
 // BUILDER
 
 void initMenu(const char* title);
-void addParagraph(Menu* m, const char* name, Action func);
 void addParagraph(const char* name, Action func);
-Menu* addSubmenu(Menu* parent, const char* name);
 Menu* addSubmenu(const char* name);
-void addValue(Menu* m, const char* name, int* val, int vmin, int vmax, int vstep);
 void addValue(const char* name, int* val, int vmin, int vmax, int vstep);
 
 // UI

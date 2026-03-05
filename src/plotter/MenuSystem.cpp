@@ -24,7 +24,8 @@ void initMenu(const char* title) {
   activeMenu = &menus[0];
 }
 
-void addParagraph(Menu* m, const char* name, Action func) {
+void Menu::addParagraph(const char* name, Action func) {
+  auto m = this;
   if (m->count >= MAX_MENU_ITEMS) return;
   byte i = m->count++;
   m->names[i] = name;
@@ -34,10 +35,11 @@ void addParagraph(Menu* m, const char* name, Action func) {
 }
 
 void addParagraph(const char* name, Action func) {
-  addParagraph(&menus[0], name, func);
+  menus[0].addParagraph(name, func);
 }
 
-Menu* addSubmenu(Menu* parent, const char* name) {
+Menu* Menu::addSubmenu(const char* name) {
+  auto parent = this;
   if (menuCount >= MAX_MENUS || parent->count >= MAX_MENU_ITEMS) return nullptr;
   byte id = menuCount++;
   menus[id].title = name;
@@ -53,10 +55,11 @@ Menu* addSubmenu(Menu* parent, const char* name) {
 }
 
 Menu* addSubmenu(const char* name) {
-  return addSubmenu(&menus[0], name);
+  return menus[0].addSubmenu(name);
 }
 
-void addValue(Menu* m, const char* name, int* val, int vmin, int vmax, int vstep) {
+void Menu::addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
+  auto m = this;
   if (m->count >= MAX_MENU_ITEMS) return;
   byte i = m->count++;
   m->names[i] = name;
@@ -69,7 +72,7 @@ void addValue(Menu* m, const char* name, int* val, int vmin, int vmax, int vstep
 }
 
 void addValue(const char* name, int* val, int vmin, int vmax, int vstep) {
-  addValue(&menus[0], name, val, vmin, vmax, vstep);
+  menus[0].addValue(name, val, vmin, vmax, vstep);
 }
 
 // UI
