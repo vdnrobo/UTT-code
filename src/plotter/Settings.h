@@ -26,8 +26,6 @@ extern int servoDown;
 extern int servoWait;
 extern int circleSegs;
 
-extern const Settings defaults;
-
 // FUNCTIONS
 
 void loadSettings();
