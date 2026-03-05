@@ -123,7 +123,7 @@ static void drawCommonMode(const Menu& menu) {
     if (i < menu.item_count) {
       drawItemCommonMode(menu.items[i]);
     } else {
-      oled.print("<< Назад");
+      oled.print("<< Назад"); // Квазивиджет
     }
     oled.println();
   }
@@ -166,38 +166,48 @@ void menuOnValue(int delta) {
   drawMenu();
 }
 
+static void bindMenu(Menu& menu) {
+  activeMenu = &menu;
+  cursor = 0;
+  scroll = 0;
+}
+
+static void onItemSelected(Menu::Item& item) {
+  if (nullptr != item.targetMenu) {
+    bindMenu(*item.targetMenu);
+    return;
+  }
+
+  if (nullptr != item.sourceValue) {
+    editMode = true;
+    return;
+  }
+
+  if (nullptr != item.action) {
+    item.action();
+    return;
+  }
+}
+
+static void onPageSelected(Menu& menu) {
+  // т.е. У нас как будто бы есть Квазивиджет, чей action - установка parentMenu
+  if (nullptr != menu.parentMenu && cursor == menu.item_count) {
+    bindMenu(*menu.parentMenu);
+    return;
+  }
+
+  onItemSelected(menu.items[cursor]);
+}
+
 void selectItem() {
   if (editMode) {
     editMode = false;
     settings.save();
-    drawMenu();
-    return;
+  } else if (activeMenu != nullptr) {
+    onPageSelected(*activeMenu);
   }
 
-  if (activeMenu->parentMenu && cursor == activeMenu->item_count) {
-    activeMenu = activeMenu->parentMenu;
-    cursor = scroll = 0;
-    drawMenu();
-    return;
-  }
-
-  if (activeMenu->items[cursor].targetMenu) {
-    activeMenu = activeMenu->items[cursor].targetMenu;
-    cursor = scroll = 0;
-    drawMenu();
-    return;
-  }
-
-  if (activeMenu->items[cursor].sourceValue) {
-    editMode = true;
-    drawMenu();
-    return;
-  }
-
-  if (activeMenu->items[cursor].action) {
-    activeMenu->items[cursor].action();
-    drawMenu();
-  }
+  drawMenu();
 }
 
 void showMode(byte m, bool done) {
